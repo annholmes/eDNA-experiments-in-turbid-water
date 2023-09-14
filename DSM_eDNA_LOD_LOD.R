@@ -1,5 +1,4 @@
-#For Holmes et al. 2022 the code was modified to include effective LOD of 6 and 7 replicates
-#anywhere it says replicates or delta I added 6 and 7
+#For Holmes et al. 2022 the code was modified to include effective LOD of 6 and 7 replicates by adding 6 and 7 anywhere it says replicates or delta
 #Lines 547-548 changes three 6s to 8s
 #YS added 6 and 7
 
@@ -473,6 +472,52 @@ write("rep8.LOD: The effective limit of detection if analyzing in 8 replicates.\
 write.csv(DAT3,file="Assay summary.csv",row.names=FALSE)
 
 ## Plot Cq value vs Standard Concentration standard curves:
+#manually edited labels to reduce number of significant digits
+DAT$Mod[DAT$Mod==0] <- "Excluded"
+DAT$Mod[DAT$Mod==1] <- "Modeled"
+for(i in 1:length(Targets)) {
+  ggOut1 <- ggplot(data=DAT[DAT$Target==Targets[i]&is.na(DAT$SQ)==FALSE,],
+                  aes(x=SQ,y=Cq,color=factor(Mod),shape=factor(Mod),size=factor(Mod))) + 
+    geom_jitter(width=0.1,alpha=0.75) + 
+    scale_shape_manual("",values=c(3,20),guide=FALSE) +
+    scale_size_manual("",values=c(3,5)) +
+    scale_x_log10() +
+    scale_color_manual("",values=c("blue", "black")) +
+    xlab("Standard Concentrations (Copies / Reaction)") +
+    ylab("Cycle threshold (Ct)") +
+    geom_abline(intercept=coef(get(curve.list[i+1]))[1],
+                slope=coef(get(curve.list[i+1]))[2]) +
+    geom_vline(xintercept=DAT3$LOD[i],colour="red") +
+    geom_vline(xintercept=DAT3$LOQ[i],linetype=2) +
+    annotate("text",y=max(DAT$Cq[DAT$Target==Targets[i]],na.rm=TRUE)*0.99,color="red",
+             x=DAT3$LOD[i]*0.8,angle=90,label="LOD") +
+    annotate("text",y=max(DAT$Cq[DAT$Target==Targets[i]],na.rm=TRUE)*0.94,
+             x=DAT3$LOQ[i]*0.8,angle=90,label="LOQ") +
+    theme_bw() + theme(legend.justification=c(1,1),legend.position=c(0.95,0.95)) +
+    ggtitle(paste0("Standard curve for: ",Targets[i])) +
+    theme(plot.title=element_text(face="bold", hjust=0.5,size=18),
+          axis.title=element_text(size=18),
+          axis.text.x = element_text(size = 15),
+          axis.text.y = element_text(size = 15),
+          legend.title=element_blank(),
+          legend.text=element_text(size=15)) +
+    annotate("text",y=min(DAT$Cq[DAT$Target==Targets[i]&is.na(DAT$SQ)==FALSE],na.rm=TRUE)*1.05,
+             x=min(DAT$SQ[DAT$Target==Targets[i]&is.na(DAT$SQ)==FALSE],na.rm=TRUE)*1.01,hjust=-0.6,
+             label=(paste0("      R-squared: 0.9971", #manually edited labels here
+                           #DAT3$R.squared[i],
+                           "\n   y = -3.4367",
+                           #DAT3$Slope[i],
+                           "x + 41.7245"
+                           #DAT3$Intercept[i]
+             )),
+             size=5) 
+  print(ggOut)
+  readline(prompt="Press [Enter] for next plot.")
+  print("Calculating... Please wait.")
+}
+
+## Plot Cq value vs Standard Concentration standard curves:
+#run this for the rest of the code to work right
 DAT$Mod[DAT$Mod==0] <- "Excluded"
 DAT$Mod[DAT$Mod==1] <- "Modeled"
 for(i in 1:length(Targets)) {
@@ -484,7 +529,7 @@ for(i in 1:length(Targets)) {
     scale_x_log10() +
     scale_color_manual("",values=c("blue", "black")) +
     xlab("Standard Concentrations (Copies / Reaction)") +
-    ylab("Cq-value") +
+    ylab("Cycle threshold (Ct)") +
     geom_abline(intercept=coef(get(curve.list[i+1]))[1],
                 slope=coef(get(curve.list[i+1]))[2]) +
     geom_vline(xintercept=DAT3$LOD[i],colour="red") +
@@ -493,15 +538,22 @@ for(i in 1:length(Targets)) {
              x=DAT3$LOD[i]*0.8,angle=90,label="LOD") +
     annotate("text",y=max(DAT$Cq[DAT$Target==Targets[i]],na.rm=TRUE)*0.94,
              x=DAT3$LOQ[i]*0.8,angle=90,label="LOQ") +
-    theme_bw() + theme(legend.justification=c(1,1),legend.position=c(1,0.99)) +
+    theme_bw() + theme(legend.justification=c(1,1),legend.position=c(0.95,0.95)) +
     ggtitle(paste0("Standard curve for: ",Targets[i])) +
-    theme(plot.title=element_text(hjust=0.5,size=20),
-          axis.title=element_text(size=16)) +
-    theme(legend.title=element_blank(),
-          legend.text=element_text(size=11)) +
+    theme(plot.title=element_text(face="bold", hjust=0.5,size=20),
+          axis.title=element_text(size=20),
+          legend.title=element_blank(),
+          legend.text=element_text(size=16)) +
     annotate("text",y=min(DAT$Cq[DAT$Target==Targets[i]&is.na(DAT$SQ)==FALSE],na.rm=TRUE)*1.05,
-             x=min(DAT$SQ[DAT$Target==Targets[i]&is.na(DAT$SQ)==FALSE],na.rm=TRUE)*1.01,hjust=0,
-             label=(paste0("R-squared: ",DAT3$R.squared[i],"\ny = ",DAT3$Slope[i],"x + ",DAT3$Intercept[i]))) #manually edited label to reduce numbers to 4 significant digits
+             x=min(DAT$SQ[DAT$Target==Targets[i]&is.na(DAT$SQ)==FALSE],na.rm=TRUE)*1.01,hjust=-0.6,
+             label=(paste0("R-squared: 0.9971", #manually edited labels to reduce numbers to 4 significant digits, must be changed back to DAT3$... for the rest of the code to run properly
+                           DAT3$R.squared[i],
+                           "\ny = -3.4367",
+                           DAT3$Slope[i],
+                           "x + 41.7245",
+                           DAT3$Intercept[i]
+                           )),
+                    size=5) 
   print(ggOut)
   readline(prompt="Press [Enter] for next plot.")
   print("Calculating... Please wait.")
@@ -560,7 +612,7 @@ for(i in 1:length(Targets)) {
     mtext(paste0("FCT used: ",LOD.list3[i+1],"    Lack of fit test: p = ",Pval),side=3)
   }
   if(is.na(LOD.list2[i+1])) {
-    plot(DAT2$Rate[DAT2$Target==Targets[i]]~log10(DAT2$Standards[DAT2$Target==Targets[i]]),
+   plot(DAT2$Rate[DAT2$Target==Targets[i]]~log10(DAT2$Standards[DAT2$Target==Targets[i]]),
          ylim=c(0,1),ylab="Detection Probability",
          xlab=expression("Log of standard concentrations (Log"[10]*"Copies / Reaction)"),
          main=paste0("LoD for: ",Targets[i]," unsolvable"))
@@ -570,6 +622,13 @@ for(i in 1:length(Targets)) {
 }
 LOD.CI <- LOD.CI[,c(6,5,1,3,4,2)]
 write.csv(LOD.CI,file="LOD_confint.csv",row.names=FALSE)
+
+save_plot("eDNA_expts_LOD_plot.png",
+          plot = last_plot(),
+          dpi=300,
+          base_height = 6,
+          base_width = 12,
+          bg="white")
 
 ## Plot the LoQ models of each assay:
 for(i in 1:length(Targets)) {
@@ -592,15 +651,20 @@ for(i in 1:length(Targets)) {
   }
   
   Decay.Plot <- ggplot(DAT2[DAT2$Target==Targets[i],], aes(x= Standards, y = Cq.CV)) +
-    geom_point(size=2) +
+    geom_point(size=4) +
     scale_x_continuous(trans = 'log10') +
     ylab("Coefficient of variation for Cq-Values") +
     xlab("Standard concentrations (Copies / Reaction)") +
     geom_vline(xintercept=DAT3$LOD[DAT3$Assay==Targets[i]],color="red") +
     annotate("text",y=max(DAT2$Cq.CV[DAT2$Target==Targets[i]],na.rm=TRUE)*0.99,
              x=DAT3$LOD[i]*0.8,angle=90,label="LOD",color="red") +
-    theme(legend.position="none") +
-    theme(plot.title=element_text(hjust=0.5))
+    theme_bw() +
+    theme(legend.position="none",
+          legend.text=element_text(size=15),
+          plot.title=element_text(size=18, hjust=0.5, face = "bold"),
+          axis.title=element_text(size=18),
+          axis.text.x = element_text(size = 15),
+          axis.text.y = element_text(size = 15)) 
   
   if(is.na(LOQ.list[i+1])==FALSE) {
     if(DAT3$LOQ[DAT3$Assay==Targets[i]]<=min(DAT2$Standards[DAT2$Target==Targets[i]])) {
@@ -642,3 +706,39 @@ for(i in 1:length(Targets)) {
   readline(prompt="Press [Enter] for next plot.")
   print("Calculating... Please wait.")
 }
+
+#save all the plots
+library(cowplot)
+
+ggOut1
+
+save_plot("eDNA_expts_standard_curve.png",
+          ggOut1,
+          dpi=300,
+          base_height = 6,
+          base_width = 6,
+          bg="white")
+
+save_plot("eDNA_expts_LOQ_model.png",
+          Decay.Plot,
+          dpi=300,
+          base_height = 6,
+          base_width = 6,
+          bg="white")
+
+#LOD plot code is loop in base r, not as easy to save plot
+#saved as png 800 px by 500 px
+
+
+grid_without_LOD <- plot_grid(ggOut1, Decay.Plot, NULL, #LOD plot will be B along the bottom
+                              labels = c("A","C","B"),
+                              ncol = 2,
+                              rel_heights = c(2.5,1))
+
+
+save_plot("Figure_3AC_StCv_LOD_LOQ.png",
+          grid_without_LOD,
+          dpi=300,
+          base_height = 8,
+          base_width = 12,
+          bg="white")
