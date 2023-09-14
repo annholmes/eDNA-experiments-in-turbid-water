@@ -6,8 +6,6 @@ Data processing workflow and supplementary files for:
 
 Holmes et al. (2023). Evaluating eDNA detection a rare fish in turbid water using field and experimental approaches
 
-Permanently archived at DOI (TBD)
-
 ## Contents
 
 Generic LOD/LOQ calculator from Merkes et al. 2019; modifications commented in script
